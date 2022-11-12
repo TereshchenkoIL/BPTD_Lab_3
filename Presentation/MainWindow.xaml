@@ -1,0 +1,28 @@
+﻿<Window x:Class="Presentation.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Presentation"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="450" Width="800">
+    <Grid>
+        <Button x:Name="FirstFileButton" Width="100px" Height="50px" Margin=" -650 -350 0 0" Content="Choose file" Click="FirstFileButton_OnClick"></Button>
+        <Button x:Name="SecondFileButton" Width="200px" Height="50px" Margin=" -320 -350 0 0" Content="Choose file to compare" Click="SecondFileButton_OnClick"></Button>
+        <Button x:Name="DirectoryButton" Width="200px" Height="50px" Margin=" 100 -350 0 0" Content="Choose directory to search" Click="DirectoryButton_OnClick"></Button>
+        
+        <ComboBox Name="ResultSize" Width="60px" Height="50px" Margin=" 400 -350 0 0" SelectionChanged="ResultSize_OnSelectionChanged">
+            <ComboBoxItem>2</ComboBoxItem>
+            <ComboBoxItem>4</ComboBoxItem>
+            <ComboBoxItem>8</ComboBoxItem>
+        </ComboBox>
+        
+        <Label Content="First file name" Margin="10 100 0 0"></Label>
+        <Label x:Name="FirstFileName" Margin="-300 -210 0 0"  Height="30px" Width="250px"></Label>
+        <Label x:Name="FirstFileHash" Margin="180 -210 0 0"  Height="30px" Width="250px"></Label>
+        
+        <Label Content="Second file name" Margin="10 200 0 0"></Label>
+        <Label x:Name="SecondFileName" Margin="-300 -20 0 0"  Height="30px" Width="250px"></Label>
+        <Label x:Name="SecondFileHash" Margin="180 -20 0 0"  Height="30px" Width="250px"></Label>
+    </Grid>
+</Window>
