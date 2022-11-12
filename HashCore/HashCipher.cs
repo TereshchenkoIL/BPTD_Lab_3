@@ -1,17 +1,22 @@
-﻿namespace HashCore;
+﻿using System.Numerics;
+
+namespace HashCore;
 
 public class HashCipher
 {
     private string[] _chunks = Array.Empty<string>();
-    private int[] _chunksResults = Array.Empty<int>();
+    private uint[] _chunksResults = Array.Empty<uint>();
     private int _maxChunkValue;
+    private int _chunkSize;
 
-    public int GetDigest(byte[] info, int chunkSize = 4)
+    public uint GetDigest(byte[] info, int chunkSize = 4)
     {
         if (info == null || info.Length == 0)
         {
             throw new ArgumentException();
         }
+
+        _chunkSize = chunkSize;
         
         _maxChunkValue = Convert.ToInt32(new string('1', chunkSize), 2);
         
@@ -27,15 +32,21 @@ public class HashCipher
 
     private void HashChunks()
     {
-        _chunksResults[0] = (0 ^ Convert.ToInt32(_chunks[0], 2));
+        _chunksResults[0] = ((uint)(0b10101010 ^ Convert.ToInt32(_chunks[0], 2)));
+
+        var sum = _chunksResults[0];
 
         for (int i = 1; i < _chunks.Length; i++)
         {
-            var currentValue = Convert.ToInt32(_chunks[i], 2);
+            uint currentValue = Convert.ToUInt32(_chunks[i], 2);
 
-            int xoredValue = _chunksResults[i - 1] ^ currentValue;
+            sum += (uint)((sum + currentValue) % _maxChunkValue);
 
-            _chunksResults[i] = (xoredValue * (_chunksResults[i - 1] + 1)) % _maxChunkValue;
+            //sum = (uint)(sum >> (int)_chunksResults[i]) | (sum << (_chunkSize - (int)_chunkSize));
+
+            uint xoredValue = _chunksResults[i - 1] ^ currentValue;
+
+            _chunksResults[i] = (uint)((sum + xoredValue * (_chunksResults[i - 1] + 1)) % _maxChunkValue);
         }
     }
 
@@ -52,6 +63,6 @@ public class HashCipher
         int i = 0;
         
         _chunks = binaryRepresentation.GroupBy(_ => i++ / chunkSize).Select(g => string.Join("", g)).ToArray();
-        _chunksResults = new int[_chunks.Length];
+        _chunksResults = new uint[_chunks.Length];
     }
 }

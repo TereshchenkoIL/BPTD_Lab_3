@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using HashCore;
@@ -13,7 +14,7 @@ namespace Presentation;
 /// </summary>
 public partial class MainWindow : Window
 {
-    private int firstFileHash;
+    private uint firstFileHash;
 
     public MainWindow()
     {
@@ -30,9 +31,12 @@ public partial class MainWindow : Window
 
             var cipher = new HashCipher();
 
-            FirstFileName.Content = fileDialog.FileName;
+            FirstFileName.Content = fileDialog.FileName.Split('\\').Last();
             firstFileHash = cipher.GetDigest(bytes, GetResultSize(ResultSize.SelectedIndex));
-            FirstFileHash.Content = $"Hash = {firstFileHash}";
+
+            var result = Convert.ToString(firstFileHash, 2).PadLeft(GetResultSize(ResultSize.SelectedIndex), '0');
+
+            FirstFileHash.Content = $"Hash = {result}";
         }
     }
 
@@ -46,8 +50,13 @@ public partial class MainWindow : Window
 
             var cipher = new HashCipher();
 
-            SecondFileName.Content = fileDialog.FileName;
-            SecondFileHash.Content = $"Hash = {cipher.GetDigest(bytes, GetResultSize(ResultSize.SelectedIndex))}";
+            SecondFileName.Content = fileDialog.FileName.Split('\\').Last();
+
+            var result = Convert.ToString(
+                cipher.GetDigest(bytes, GetResultSize(ResultSize.SelectedIndex)), 2)
+                .PadLeft(GetResultSize(ResultSize.SelectedIndex), '0');
+
+            SecondFileHash.Content = $"Hash = {result}";
         }
     }
 
