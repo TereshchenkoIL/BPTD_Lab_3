@@ -17,7 +17,9 @@
             <ComboBoxItem>8</ComboBoxItem>
         </ComboBox>
         
-        <Button x:Name="CollisionButton" Width="120px" Height="50px" Margin=" 610 -350 0 0" Content="Make word collision" Click="WordCollisionButton_OnClick"></Button>
+        
+        <Button x:Name="CollisionButton" Width="120px" Height="50px" Margin=" 610 -350 0 0" Content="Make file collision" Click="WordCollisionButton_OnClick"></Button>
+        <Button x:Name="CollisionPhotoButton" Width="120px" Height="50px" Margin=" 610 -220 0 0" Content="Make photo collision" Click="CollisionPhotoButton_OnClick"></Button>
         
         <Label Content="First file name" Margin="10 100 0 0"></Label>
         <Label x:Name="FirstFileName" Margin="-300 -210 0 0"  Height="30px" Width="250px"></Label>
