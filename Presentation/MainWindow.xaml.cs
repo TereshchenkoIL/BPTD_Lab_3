@@ -1,11 +1,18 @@
 ﻿using System;
+using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Threading;
 using HashCore;
 using Microsoft.Win32;
 using Ookii.Dialogs.Wpf;
+using Xceed.Document.NET;
+using Xceed.Words.NET;
 
 namespace Presentation;
 
@@ -15,6 +22,8 @@ namespace Presentation;
 public partial class MainWindow : Window
 {
     private uint firstFileHash;
+    private string firstFileName;
+
 
     public MainWindow()
     {
@@ -27,6 +36,7 @@ public partial class MainWindow : Window
 
         if (fileDialog.ShowDialog() == true)
         {
+            firstFileName = fileDialog.FileName;
             var bytes = File.ReadAllBytes(fileDialog.FileName);
 
             var cipher = new HashCipher();
@@ -53,7 +63,7 @@ public partial class MainWindow : Window
             SecondFileName.Content = fileDialog.FileName.Split('\\').Last();
 
             var result = Convert.ToString(
-                cipher.GetDigest(bytes, GetResultSize(ResultSize.SelectedIndex)), 2)
+                    cipher.GetDigest(bytes, GetResultSize(ResultSize.SelectedIndex)), 2)
                 .PadLeft(GetResultSize(ResultSize.SelectedIndex), '0');
 
             SecondFileHash.Content = $"Hash = {result}";
@@ -121,5 +131,135 @@ public partial class MainWindow : Window
 
             foreach (var dirInfo in subDirs) WalkDirectoryTree(dirInfo);
         }
+    }
+
+    private void WordCollisionButton_OnClick(object sender, RoutedEventArgs e)
+    {
+        var size = GetResultSize(ResultSize.SelectedIndex);
+        FileInfo fi = new FileInfo(firstFileName);
+
+        if (fi.Extension == ".cs")
+        {
+            var collisionFileName = "collisionFile" + fi.Extension;
+            var tempFileName = "temp" + fi.Extension;
+
+            File.Copy(firstFileName, tempFileName, true);
+
+            while (true)
+            {
+                var text = File.ReadAllText(tempFileName) + $"\n// {Guid.NewGuid()}";
+                File.WriteAllText(collisionFileName, text);
+
+                var bytes = File.ReadAllBytes(collisionFileName);
+
+                var cipher = new HashCipher();
+
+                var fileHash = cipher.GetDigest(bytes, GetResultSize(ResultSize.SelectedIndex));
+
+                MessageBox.Show("new file hash = " +
+                                Convert.ToString(fileHash, 2).PadLeft(GetResultSize(ResultSize.SelectedIndex), '0'));
+
+                if (firstFileHash == fileHash)
+                {
+                    MessageBox.Show("Done");
+
+                    break;
+                }
+            }
+
+            File.Delete(tempFileName);
+        }
+        else
+        {
+            var task = Task.Run(() =>
+            {
+                var collisionFileName = "collisionFile" + fi.Extension;
+                var tempFileName = "temp" + fi.Extension;
+
+                File.Copy(firstFileName, tempFileName, true);
+
+                while (true)
+                {
+                    using (var document = DocX.Load(tempFileName))
+                    {
+                        document.AddCustomProperty(new CustomProperty("my custom property", Guid.NewGuid().ToString()));
+                        var props = document.CustomProperties;
+                        document.SaveAs(collisionFileName);
+                    }
+
+                    var bytes = File.ReadAllBytes(collisionFileName);
+
+                    var cipher = new HashCipher();
+
+                    var fileHash = cipher.GetDigest(bytes, size);
+
+                    if (firstFileHash == fileHash)
+                    {
+                        MessageBox.Show("Done");
+
+                        break;
+                    }
+                }
+
+                File.Delete(tempFileName);
+            });
+        }
+
+    }
+
+    private void CollisionPhotoButton_OnClick(object sender, RoutedEventArgs e)
+    {
+        FileInfo fi = new FileInfo(firstFileName);
+
+        var collisionFileName = "collisionFile" + fi.Extension;
+        var tempFileName = "temp" + fi.Extension;
+
+        File.Copy(firstFileName, tempFileName, true);
+
+        while (true)
+        {
+            System.Drawing.Image originalImage = System.Drawing.Image.FromFile(tempFileName);
+
+            PropertyItem[] properties = originalImage.PropertyItems;
+
+            Bitmap bmpImage = new Bitmap((Bitmap) originalImage);
+
+            originalImage.Dispose();
+
+
+            PropertyItem item = properties[0];
+
+            string sTmp = Guid.NewGuid().ToString();
+            var itemData = System.Text.Encoding.UTF8.GetBytes(sTmp);
+            itemData[itemData.Length - 1] = 0;
+            item.Type = 2;
+            item.Id = 315;
+            item.Len = itemData.Length;
+            item.Value = itemData;
+            bmpImage.SetPropertyItem(item);
+
+            bmpImage.Save(collisionFileName, System.Drawing.Imaging.ImageFormat.Jpeg);
+
+            bmpImage.Dispose();
+
+
+            var bytes = File.ReadAllBytes(collisionFileName);
+
+            var cipher = new HashCipher();
+
+            var fileHash = cipher.GetDigest(bytes, GetResultSize(ResultSize.SelectedIndex));
+
+            MessageBox.Show("new file hash = " +
+                            Convert.ToString(fileHash, 2).PadLeft(GetResultSize(ResultSize.SelectedIndex), '0'));
+
+            if (firstFileHash == fileHash)
+            {
+                MessageBox.Show("Done");
+
+                break;
+            }
+        }
+
+        File.Delete(tempFileName);
     }
 }
